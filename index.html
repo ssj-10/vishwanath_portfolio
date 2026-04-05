@@ -1017,24 +1017,61 @@
     window.open('https://raw.githubusercontent.com/SSJ-10/Vishwanath_Portfolio/main/Resume_Vishwanath_CH.pdf', '_blank');
   }
 
-  // ── SEND MESSAGE (mailto) ──
+  // ── SEND MESSAGE (Formspree) ──
   function sendMessage() {
     var name    = document.getElementById('form-name').value.trim();
     var email   = document.getElementById('form-email').value.trim();
     var subject = document.getElementById('form-subject').value.trim();
     var message = document.getElementById('form-message').value.trim();
+    var btn     = document.querySelector('.contact-form .btn-primary');
 
     if (!name || !email || !message) {
-      alert('Please fill in your name, email, and message.');
+      showFormStatus('Please fill in your name, email, and message.', 'error');
       return;
     }
 
-    var body = 'From: ' + name + ' <' + email + '>\n\n' + message;
-    var mailto = 'mailto:vishwanath.sabarad14@gmail.com'
-      + '?subject=' + encodeURIComponent(subject || 'Portfolio Enquiry')
-      + '&body='    + encodeURIComponent(body);
+    btn.textContent = 'SENDING...';
+    btn.disabled = true;
 
-    window.location.href = mailto;
+    fetch('https://formspree.io/f/xgopprjo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ name: name, email: email, subject: subject || 'Portfolio Enquiry', message: message })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data.ok) {
+        showFormStatus('Message sent! I will get back to you soon.', 'success');
+        document.getElementById('form-name').value = '';
+        document.getElementById('form-email').value = '';
+        document.getElementById('form-subject').value = '';
+        document.getElementById('form-message').value = '';
+      } else {
+        showFormStatus('Something went wrong. Please try again.', 'error');
+      }
+      btn.textContent = 'SEND MESSAGE';
+      btn.disabled = false;
+    })
+    .catch(function() {
+      showFormStatus('Something went wrong. Please try again.', 'error');
+      btn.textContent = 'SEND MESSAGE';
+      btn.disabled = false;
+    });
+  }
+
+  function showFormStatus(msg, type) {
+    var existing = document.getElementById('form-status');
+    if (existing) existing.remove();
+    var el = document.createElement('div');
+    el.id = 'form-status';
+    el.textContent = msg;
+    el.style.cssText = 'font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.06em; padding: 0.65rem 1rem; border-radius: 3px; margin-top: 0.5rem;'
+      + (type === 'success'
+        ? 'background: var(--green-dim); color: var(--green); border: 1px solid rgba(74,222,128,0.25);'
+        : 'background: rgba(251,100,100,0.1); color: #f87171; border: 1px solid rgba(251,100,100,0.25);');
+    var btn = document.querySelector('.contact-form .btn-primary');
+    btn.parentNode.insertBefore(el, btn.nextSibling);
+    setTimeout(function() { if (el.parentNode) el.remove(); }, 5000);
   }
 
   // ── BLOG NOTE EXPAND/COLLAPSE ──
